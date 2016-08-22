@@ -10,19 +10,20 @@ require 'json'
 # ===============================================
 require_relative './BattleNet/BattleNet'
 
+tc = '';
 bot = Discordrb::Commands::CommandBot.new token: 'MjE2MTkyNjUwMjM4MzYxNjAx.CpigoA.7yutKMWJraKvVXmmM3ppAWQaORQ', application_id: 216192650238361601, prefix: '!'
 
 # ===============================================
 # Default Ping response
 # ===============================================
-bot.command :ping do |event|
+bot.command( :ping, :description => 'Basic Ping-Pong Response.') do |event|
 	event.respond 'pong'
 end
 
 # ===============================================
 # Addons Out
 # ===============================================
-bot.command :addons do |event, type|
+bot.command( :addons, :description => 'Returns the addons that are required to participate in particular events with the guild.', :usage => '!addons - for PvP addons, !addons pve - for PvE addons' ) do |event, type|
 	if type.eql? 'pve'
 		event.respond 'Wretched requires the following WoW Addons:'
 		event.respond '1. Deadly Boss Mods - https://mods.curse.com/addons/wow/deadly-boss-mods'
@@ -38,21 +39,25 @@ end
 # ===============================================
 # Guildmaster
 # ===============================================
-bot.command :guildmaster do |event|
+bot.command( :guildmaster, :description => 'Will send the Guild Master\'s name and BattleTag to the user as a Direct Message.' ) do |event|
 	event.user.pm( 'The guildmaster is Lokien. His BattleTag is XtasyArmada#1751' )
 end
 
 # ===============================================
 # Random Roll
 # ===============================================
-bot.command :roll do |event, min, max|
-	rand( 1 .. 100 )
+bot.command( :roll, :description => 'Will generate a random number.', :usage => 'Defaults to a number between 1 and 100, unless min and max are explicitly expressed. (e.g., !roll 1 100' ) do |event, min, max|
+	if min && max
+		rand( min.to_i .. max.to_i )
+	else
+		rand( 1 .. 100 )
+	end
 end
 
 # ===============================================
 # Realm Status
 # ===============================================
-bot.command :realmstatus do |event|
+bot.command( :realmstatus, :description => 'Will check realm status for connected realms.' ) do |event|
 	realms = ['anubarak', 'nathrezim', 'garithos', 'smolderthorn', 'crushridge']
 
 	status = BattleNet.realm_status( realms, 'q6k9yhwahdvafnmn58qsk3ubnn6sheer' )
@@ -69,37 +74,9 @@ bot.command :realmstatus do |event|
 end
 
 # ===============================================
-# Boss Master List
-# ===============================================
-bot.command :bosslist do |event, id|
-	status = BattleNet.boss_master_list( 'q6k9yhwahdvafnmn58qsk3ubnn6sheer' )
-	puts status
-end
-
-# ===============================================
-# Boss Info
-# ===============================================
-bot.command :boss do |event, id|
-	status = BattleNet.boss( id, 'q6k9yhwahdvafnmn58qsk3ubnn6sheer' )
-	npcs = status['npcs']
-	npcs.each do |boss|
-		event.send_message boss['name']
-	end
-end
-
-# ===============================================
-# Action Dump
-# ===============================================
-bot.command :auction do |event, realm|
-	event.respond 'Feature coming soon.'
-	# auctions = BattleNet.auction_data_status( realm, 'q6k9yhwahdvafnmn58qsk3ubnn6sheer' )
-	# puts auctions
-end
-
-# ===============================================
 # Arena Ratings
 # ===============================================
-bot.command :ratings do |event, toon|	
+bot.command( :ratings, :description => 'Will retrieve the PvP ratings for the provided character.', :usage => '!ratings Lokien-Anub\'arak' ) do |event, toon|	
 	charArray = toon.split( '-' )
 	name = charArray[0]
 	realm = charArray[1]
@@ -117,7 +94,21 @@ bot.command :ratings do |event, toon|
 	event.send_message 'RBG: ' + rbgs
 end
 
-bot.run
+bot.command( :set, :description => 'Used to set specific settings on the bot.', :usage => '!set targetcaller <name>' ) do |event, setting, value|
+	# Check for permissions as administrator
+	case setting
+		when 'targetcaller'
+			tc = value
+			event.send_message tc + ' has been set as priority speaker. Other users will be muted when in the same channel as ' + tc + '.'
+			bot.send_message( 216234631538802688, 'Target Caller Updated.' )
+		else
+			event.send_message 'You may use the following options with !set:'
+			event.send_message '!set targetcaller <discord name> - Sets the active Target Caller'
+			event.send_message '!set welcome <the message>'
+		end
+end
+
+bot.run :async
 
 bot.send_message( 216234631538802688, 'Bot active.' )
 bot.sync

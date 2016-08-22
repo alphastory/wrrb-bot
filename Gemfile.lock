@@ -22,6 +22,7 @@ GEM
     httparty (0.14.0)
       multi_xml (>= 0.5.2)
     i18n (0.7.0)
+    json (2.0.2)
     mime-types (3.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2016.0521)
@@ -53,6 +54,7 @@ PLATFORMS
 DEPENDENCIES
   discordrb
   httparty
+  json
 
 BUNDLED WITH
    1.12.5
